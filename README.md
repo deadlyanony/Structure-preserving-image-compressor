@@ -1,34 +1,39 @@
 # Structure-Preserving Image Compressor
 
-Walk a source image library, auto-detect images at any nesting depth, clone the
-folder structure into an output folder, and re-encode every image to a
-compressed format (WebP by default) with a configurable quality and size.
+Drop your image folders into `input/`, run the script, and a compressed copy of
+the whole folder structure appears in `output/`. No path setup required — it
+auto-detects images at any nesting depth and clones the structure exactly.
 
-## Workflow
+## Quick start
 
-1. **Configure** — edit `config.json` (see below).
-2. **Install** — `pip install -r requirements.txt`.
-3. **Run** — `python compressor.py`.
-4. **Verify** — the cloned, compressed tree is written to `output_dir`.
+1. **Install** (once):
+   ```
+   pip install -r requirements.txt
+   ```
+2. **Drop folders** — copy your image folders into `input/`.
+3. **Run**:
+   ```
+   python compressor.py
+   ```
+4. **Done** — the compressed tree is in `output/`, mirroring `input/` folder-for-folder.
 
-The script recursively walks `input_dir` and, for every image file it finds:
+That's it. To change format or quality, edit `config.json` and run again.
 
-1. Recreates the same relative folder path under `output_dir` (the whole tree is
-   cloned, including any sub-sub folders).
+## What it does
+
+For every image found under `input/` (any sub-sub folder depth):
+
+1. Recreates the same relative folder path under `output/`.
 2. Resizes so the longest edge is at most `max_dimension`.
 3. Re-encodes to `format` at `quality`, stepping quality down (and finally
    shrinking dimensions) until each file is under `target_size_kb`.
 4. Keeps the original filename and swaps the extension (e.g. `1-Img191.jpg` ->
-   `1-Img191.webp`), unless a custom `naming` template is set.
-
-No folder names need to be configured — the structure is detected automatically.
+   `1-Img191.webp`).
 
 ## Config (`config.json`)
 
 | Key | Meaning | Default |
 | --- | --- | --- |
-| `input_dir` | Source folder to scan (cloned recursively) | — |
-| `output_dir` | Where the cloned, compressed tree is written | — |
 | `format` | Output format: `webp`, `jpeg`, `jpg`, `png` | `webp` |
 | `quality` | Compression rate 1–100 (higher = better quality, larger file) | `85` |
 | `method` | WebP encoding effort 0–6 (higher = slower, smaller) | `4` |
@@ -37,11 +42,16 @@ No folder names need to be configured — the structure is detected automaticall
 | `extensions` | Source file extensions to process | `[".jpg", ".jpeg", ".png"]` |
 | `exclude_folders` | Folder names to skip while walking (e.g. `["HIGH RES"]`) | `[]` |
 | `naming` | Output filename template (`name`, `filename`, `ext`) | `{name}.{ext}` |
-| `overwrite` | Re-encode files that already exist in `output_dir` | `false` |
+| `overwrite` | Re-encode files that already exist in `output/` | `false` |
 
-Paths are resolved relative to the config file's location, so keep
-`config.json` and the source/output folders next to each other or use absolute
-paths.
+### Optional path overrides
+
+By default `input/` and `output/` sit inside this code folder. If you want to
+point elsewhere, add either key to `config.json`:
+
+```json
+{ "input_dir": "D:/photos", "output_dir": "D:/photos-compressed" }
+```
 
 ## Examples
 

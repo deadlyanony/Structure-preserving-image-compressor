@@ -1,6 +1,4 @@
 {
-  "input_dir": "../NEW STYLES IMAGES HIGH RESOLUTION AND LOW RESOLUTION PART - 1",
-  "output_dir": "../COMPRESSED-OUTPUT",
   "format": "webp",
   "quality": 85,
   "method": 4,

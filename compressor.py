@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 """Structure-preserving image compressor.
 
-Walks an input folder recursively, auto-detects image files at any nesting
-depth, clones the folder structure into an output folder, and re-encodes each
-image to the configured format, size, and quality.
+Drop your image folders into `input/`, run this script, and the compressed copy
+of the whole folder structure appears in `output/`. No path setup required.
 
 Usage:
     python compressor.py [path/to/config.json]
 
-Defaults to ./config.json when no path is given.
+Defaults to ./config.json (next to this script) when no path is given.
 """
 
 import io
@@ -20,6 +19,7 @@ from PIL import Image
 
 DEFAULT_CONFIG = "config.json"
 SUPPORTED_FORMATS = {"webp", "jpeg", "jpg", "png"}
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def load_config(path):
@@ -28,7 +28,7 @@ def load_config(path):
 
 
 def resolve_path(base, value):
-    """Resolve a possibly-relative path against the config file's directory."""
+    """Resolve a possibly-relative path against `base`."""
     if not value:
         return None
     value = os.path.expanduser(os.path.expandvars(str(value)))
@@ -76,14 +76,12 @@ def encode(im, fmt, quality, target_bytes, method):
 
 
 def main():
-    config_path = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_CONFIG
+    config_path = sys.argv[1] if len(sys.argv) > 1 else os.path.join(BASE_DIR, DEFAULT_CONFIG)
     cfg = load_config(config_path)
-    base = os.path.dirname(os.path.abspath(config_path))
 
-    input_dir = resolve_path(base, cfg.get("input_dir"))
-    output_dir = resolve_path(base, cfg.get("output_dir"))
-    if not input_dir or not os.path.isdir(input_dir):
-        raise SystemExit(f"input_dir not found: {input_dir}")
+    # `input` and `output` live inside this code folder by default.
+    input_dir = resolve_path(BASE_DIR, cfg.get("input_dir", "input"))
+    output_dir = resolve_path(BASE_DIR, cfg.get("output_dir", "output"))
 
     fmt = str(cfg.get("format", "webp")).lower()
     if fmt not in SUPPORTED_FORMATS:
@@ -101,7 +99,11 @@ def main():
     naming = cfg.get("naming", "{name}.{ext}")
     overwrite = cfg.get("overwrite", False)
 
+    os.makedirs(input_dir, exist_ok=True)
     os.makedirs(output_dir, exist_ok=True)
+
+    print(f"Input : {input_dir}")
+    print(f"Output: {output_dir}")
 
     total_new = 0
     total_skipped = 0
@@ -139,6 +141,8 @@ def main():
 
     print("---")
     print(f"Done. {total_new} new files, {total_skipped} skipped, {total_bytes / 1024 / 1024:.1f} MB total.")
+    if total_new == 0 and total_skipped == 0:
+        print(f"No images found. Put your image folders inside: {input_dir}")
 
 
 if __name__ == "__main__":
