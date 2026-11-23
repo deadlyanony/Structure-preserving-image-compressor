@@ -13,3 +13,6 @@ venv/
 Thumbs.db
 .idea/
 .vscode/
+
+# Optional CI workflow (requires GitHub token 'workflow' scope to push)
+.github/workflows/
