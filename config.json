@@ -6,10 +6,8 @@
   "method": 4,
   "max_dimension": 1500,
   "target_size_kb": 500,
-  "source_subfolder": "LOW RES",
-  "fallback_subfolder": "HIGH RES",
   "extensions": [".jpg", ".jpeg", ".png"],
-  "folder_prefix_regex": "^[^-\\s]+",
-  "naming": "{prefix}-{n}.{ext}",
+  "exclude_folders": [],
+  "naming": "{name}.{ext}",
   "overwrite": false
 }

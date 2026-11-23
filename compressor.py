@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Bulk image compressor.
+"""Structure-preserving image compressor.
 
-Reads a JSON config file, clones the source folder structure, and re-encodes
-each image to the configured format, size, and quality.
+Walks an input folder recursively, auto-detects image files at any nesting
+depth, clones the folder structure into an output folder, and re-encodes each
+image to the configured format, size, and quality.
 
 Usage:
     python compressor.py [path/to/config.json]
@@ -13,7 +14,6 @@ Defaults to ./config.json when no path is given.
 import io
 import json
 import os
-import re
 import sys
 
 from PIL import Image
@@ -35,12 +35,6 @@ def resolve_path(base, value):
     if not os.path.isabs(value):
         value = os.path.join(base, value)
     return os.path.normpath(value)
-
-
-def leading_number(name):
-    """Return the first integer found in a filename (used for ordering/naming)."""
-    match = re.search(r"\d+", name)
-    return int(match.group(0)) if match else 0
 
 
 def encode(im, fmt, quality, target_bytes, method):
@@ -102,47 +96,36 @@ def main():
     target_size_kb = cfg.get("target_size_kb") or 0
     target_bytes = int(target_size_kb * 1024) if target_size_kb else None
 
-    source_subfolder = cfg.get("source_subfolder", "LOW RES")
-    fallback_subfolder = cfg.get("fallback_subfolder", "HIGH RES")
     extensions = tuple(e.lower() for e in cfg.get("extensions", [".jpg", ".jpeg", ".png"]))
-    prefix_regex = cfg.get("folder_prefix_regex", r"^[^\-\s]+")
-    naming = cfg.get("naming", "{prefix}-{n}.{ext}")
+    exclude_folders = {str(d).lower() for d in cfg.get("exclude_folders", [])}
+    naming = cfg.get("naming", "{name}.{ext}")
     overwrite = cfg.get("overwrite", False)
 
     os.makedirs(output_dir, exist_ok=True)
 
-    folders = sorted(d for d in os.listdir(input_dir) if os.path.isdir(os.path.join(input_dir, d)))
     total_new = 0
     total_skipped = 0
     total_bytes = 0
 
-    for folder in folders:
-        folder_path = os.path.join(input_dir, folder)
-        src_dir = os.path.join(folder_path, source_subfolder)
-        if not os.path.isdir(src_dir) and fallback_subfolder:
-            src_dir = os.path.join(folder_path, fallback_subfolder)
-        if not os.path.isdir(src_dir):
-            print(f"SKIP (no image subfolder): {folder}")
-            continue
-
-        match = re.match(prefix_regex, folder)
-        prefix = match.group(0) if match else folder
-
-        out_dir = os.path.join(output_dir, folder)
-        os.makedirs(out_dir, exist_ok=True)
-
-        files = [f for f in os.listdir(src_dir) if f.lower().endswith(extensions)]
-        files.sort(key=leading_number)
+    for root, dirs, files in os.walk(input_dir):
+        dirs[:] = [d for d in dirs if d.lower() not in exclude_folders]
+        rel_dir = os.path.relpath(root, input_dir)
+        out_dir = output_dir if rel_dir == "." else os.path.join(output_dir, rel_dir)
 
         for fname in files:
-            n = leading_number(fname)
-            out_name = naming.format(prefix=prefix, n=n, ext=ext, name=os.path.splitext(fname)[0])
+            if not fname.lower().endswith(extensions):
+                continue
+
+            name = os.path.splitext(fname)[0]
+            out_name = naming.format(name=name, filename=fname, ext=ext)
             out_path = os.path.join(out_dir, out_name)
+
             if os.path.exists(out_path) and not overwrite:
                 total_skipped += 1
                 continue
 
-            im = Image.open(os.path.join(src_dir, fname)).convert("RGB")
+            os.makedirs(out_dir, exist_ok=True)
+            im = Image.open(os.path.join(root, fname)).convert("RGB")
             w, h = im.size
             if max_dimension and max(w, h) > max_dimension:
                 scale = max_dimension / max(w, h)
@@ -153,8 +136,6 @@ def main():
                 f.write(data)
             total_new += 1
             total_bytes += len(data)
-
-        print(f"{folder}: {len(files)} images")
 
     print("---")
     print(f"Done. {total_new} new files, {total_skipped} skipped, {total_bytes / 1024 / 1024:.1f} MB total.")
