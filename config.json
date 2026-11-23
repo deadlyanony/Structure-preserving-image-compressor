@@ -1,0 +1,15 @@
+{
+  "input_dir": "../NEW STYLES IMAGES HIGH RESOLUTION AND LOW RESOLUTION PART - 1",
+  "output_dir": "../COMPRESSED-OUTPUT",
+  "format": "webp",
+  "quality": 85,
+  "method": 4,
+  "max_dimension": 1500,
+  "target_size_kb": 500,
+  "source_subfolder": "LOW RES",
+  "fallback_subfolder": "HIGH RES",
+  "extensions": [".jpg", ".jpeg", ".png"],
+  "folder_prefix_regex": "^[^-\\s]+",
+  "naming": "{prefix}-{n}.{ext}",
+  "overwrite": false
+}
