@@ -1,4 +1,4 @@
-# Bulk Image Compressor
+# Structure-Preserving Image Compressor
 
 Clone the folder structure of a source image library and re-encode every image
 to a compressed format (WebP by default) with a configurable quality and size.
