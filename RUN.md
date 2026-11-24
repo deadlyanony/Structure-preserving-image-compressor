@@ -38,16 +38,18 @@ python compressor.py
 
 ## 4. Get your compressed images
 
-The compressed copy is written to `output/`, mirroring `input/` folder-for-folder:
+The compressed copy is written to `output/`, mirroring `input/` folder-for-folder.
+By default, images are renamed using the top-level folder name plus a running
+number, so `Style A`'s images become `Style A-1.webp`, `Style A-2.webp`, and so on:
 
 ```
 output/
   Style A/
     Group 1/
-      1-shot.webp
-      2-shot.webp
+      Style A-1.webp
+      Style A-2.webp
   Style B/
-    photo.webp
+    Style B-1.webp
 ```
 
 ## Change format / quality
@@ -60,6 +62,22 @@ Edit `config.json`:
 - `target_size_kb`: per-file size cap (0 = no cap)
 
 Then run `python compressor.py` again.
+
+## Change renaming
+
+These `true`/`false` settings live in `config.json`:
+
+- `rename_enabled`: `true` renames files; `false` keeps original names.
+- `rename_use_sub_level`: `false` uses the top-level folder; `true` uses the
+  second folder level.
+- `rename_as_prefix`: `true` puts the name before the number; `false` after it.
+- `rename_use_folder_name`: in prefix mode, `true` uses the folder name;
+  `false` uses `rename_text`.
+- `rename_text`: fixed text used for suffix mode, or for prefix mode when the
+  folder name is off.
+
+The defaults produce names like `AF7689-1.webp`. Full examples are in
+[`README.md`](README.md#renaming).
 
 ## Optional: skip a folder
 

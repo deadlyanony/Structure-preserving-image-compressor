@@ -5,7 +5,11 @@
   "max_dimension": 1500,
   "target_size_kb": 500,
   "extensions": [".jpg", ".jpeg", ".png"],
-  "exclude_folders": [],
-  "naming": "{name}.{ext}",
+  "exclude_folders": ["HIGH RES"],
+  "rename_enabled": true,
+  "rename_use_sub_level": true,
+  "rename_as_prefix": true,
+  "rename_use_folder_name": true,
+  "rename_text": "AF",
   "overwrite": false
 }
